@@ -11,7 +11,7 @@ describe('Utils | output', function () {
             dependency: 'foo',
             versions: [
               { version: '1.2.3', packages: ['foo'] },
-              { version: '4.5.6', packages: ['bar', 'baz'] },
+              { version: '4.5.6', packages: ['.', 'bar', 'baz'] },
             ],
           },
           {
@@ -50,15 +50,28 @@ describe('Utils | output', function () {
               },
             ],
           },
+          {
+            dependency: 'biz',
+            versions: [
+              {
+                version: '^1.0.0',
+                packages: ['package1'],
+              },
+              {
+                version: 'workspace:*', // Invalid/abnormal version.
+                packages: ['package2'],
+              },
+            ],
+          },
         ]),
-        `Found 3 dependencies with mismatching versions across the workspace. Fix with \`--fix\`.
-╔═══════╤════════╤══════════╗
-║ \u001B[1mfoo\u001B[22m   │ Usages │ Packages ║
-╟───────┼────────┼──────────╢
-║ \u001B[91m4.5.6\u001B[39m │ \u001B[1m2\u001B[22m      │ bar, baz ║
-╟───────┼────────┼──────────╢
-║ \u001B[91m1.2.3\u001B[39m │ 1      │ foo      ║
-╚═══════╧════════╧══════════╝
+        `Found 4 dependencies with mismatching versions across the workspace. Fix with \`--fix\`.
+╔═══════╤════════╤══════════════════╗
+║ \u001B[1mfoo\u001B[22m   │ Usages │ Packages         ║
+╟───────┼────────┼──────────────────╢
+║ \u001B[91m4.5.6\u001B[39m │ \u001B[1m3\u001B[22m      │ (Root), bar, baz ║
+╟───────┼────────┼──────────────────╢
+║ \u001B[91m1.2.3\u001B[39m │ 1      │ foo              ║
+╚═══════╧════════╧══════════════════╝
 ╔═══════╤════════╤════════════════════════════════════════════╗
 ║ \u001B[1mbar\u001B[22m   │ Usages │ Packages                                   ║
 ╟───────┼────────┼────────────────────────────────────────────╢
@@ -75,6 +88,13 @@ describe('Utils | output', function () {
 ╟────────┼────────┼──────────╢
 ║ \u001B[91m^1.0.0\u001B[39m │ 1      │ package3 ║
 ╚════════╧════════╧══════════╝
+╔═════════════╤════════╤══════════╗
+║ \u001B[1mbiz\u001B[22m         │ Usages │ Packages ║
+╟─────────────┼────────┼──────────╢
+║ \u001B[91m^1.0.0\u001B[39m      │ 1      │ package1 ║
+╟─────────────┼────────┼──────────╢
+║ \u001B[91mworkspace:*\u001B[39m │ 1      │ package2 ║
+╚═════════════╧════════╧══════════╝
 `
       );
     });

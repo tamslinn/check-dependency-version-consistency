@@ -1,9 +1,9 @@
 # check-dependency-version-consistency
 
-[![npm version](https://badge.fury.io/js/check-dependency-version-consistency.svg)](https://badge.fury.io/js/check-dependency-version-consistency)
-![CI](https://github.com/bmish/check-dependency-version-consistency/workflows/CI/badge.svg)
+[![npm version][npm-image]][npm-url]
+[![CI][ci-image]][ci-url]
 
-This plugin checks to ensure that dependencies are on consistent versions across a monorepo / yarn workspace. For example, every package in a workspace that has a dependency on `eslint` should specify the same version for it.
+This CLI tool checks to ensure that dependencies are on consistent versions across a monorepo / yarn workspace. For example, every package in a workspace that has a dependency on `eslint` should specify the same version for it.
 
 ## Motivation
 
@@ -21,19 +21,20 @@ To install:
 yarn add --dev check-dependency-version-consistency
 ```
 
-To run, use this command and optionally pass the path to the workspace root:
+To run, use this command and optionally pass the path to the workspace root (where the `package.json` file containing `workspaces` is located):
 
 ```sh
 yarn check-dependency-version-consistency .
 ```
 
-This can be incorporated as one of your package.json lint scripts like this:
+This can be incorporated as one of your `package.json` lint scripts like this:
 
 ```json
 {
   "lint": "npm-run-all --continue-on-error --aggregate-output --parallel lint:*",
   "lint:dependency-versions": "check-dependency-version-consistency .",
-  "lint:js": "eslint . --cache",
+  "lint:dependency-versions:fix": "npm-run-all \"lint:dependency-versions --fix\"",
+  "lint:js": "eslint --cache .",
 }
 ```
 
@@ -69,4 +70,13 @@ Found 2 dependencies with mismatching versions across the workspace. Fix with `-
 
 ## Related
 
-* [npm-package-json-lint](https://github.com/tclindner/npm-package-json-lint) — use this complimentary tool to enforce that your dependency versions use consistent range types (i.e. [prefer-caret-version-ranges](https://npmpackagejsonlint.org/docs/en/rules/dependencies/prefer-caret-version-dependencies), [prefer-caret-version-devDependencies](https://npmpackagejsonlint.org/docs/en/rules/dependencies/prefer-caret-version-devdependencies))
+* [npm-package-json-lint](https://github.com/tclindner/npm-package-json-lint) — use this complementary tool to enforce that your dependency versions use consistent range types (i.e. [prefer-caret-version-ranges](https://npmpackagejsonlint.org/docs/en/rules/dependencies/prefer-caret-version-dependencies), [prefer-caret-version-devDependencies](https://npmpackagejsonlint.org/docs/en/rules/dependencies/prefer-caret-version-devdependencies))
+
+## References
+
+* [Yarn Workspaces](https://classic.yarnpkg.com/lang/en/docs/workspaces/)
+
+[npm-image]: https://badge.fury.io/js/check-dependency-version-consistency.svg
+[npm-url]: https://www.npmjs.com/package/check-dependency-version-consistency
+[ci-image]: https://github.com/bmish/check-dependency-version-consistency/workflows/CI/badge.svg
+[ci-url]: https://github.com/bmish/check-dependency-version-consistency/actions/workflows/ci.yml

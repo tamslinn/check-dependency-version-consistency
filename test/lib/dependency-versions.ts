@@ -6,7 +6,7 @@ import {
   fixMismatchingVersions,
   compareRanges,
 } from '../../lib/dependency-versions.js';
-import { strictEqual, deepStrictEqual, throws } from 'node:assert';
+import { ok, strictEqual, deepStrictEqual, throws } from 'node:assert';
 import {
   FIXTURE_PATH_VALID,
   FIXTURE_PATH_INCONSISTENT_VERSIONS,
@@ -51,6 +51,7 @@ describe('Utils | dependency-versions', function () {
             {
               version: '1.2.0',
               packages: [
+                '.',
                 join('scope1', 'package2'),
                 join('scope1', 'package3'),
               ],
@@ -129,14 +130,25 @@ describe('Utils | dependency-versions', function () {
     beforeEach(function () {
       // Create a mock workspace filesystem for temporary usage in this test because changes will be written to some files.
       mockFs({
-        'package.json': '{"workspaces": ["scope1/*"]}',
+        'package.json': JSON.stringify({
+          workspaces: ['scope1/*'],
+          devDependencies: { foo: '^1.0.0' },
+        }),
         'scope1/package1': {
-          'package.json':
-            '{"dependencies": {"foo": "^1.0.0", "bar": "^3.0.0" }}',
+          'package.json': JSON.stringify({
+            dependencies: { foo: '^1.0.0', bar: '^3.0.0', 'a.b.c': '5.0.0' },
+            devDependencies: { 'one.two.three': '^4.1.0' },
+          }),
         },
         'scope1/package2': {
-          'package.json':
-            '{"dependencies": {"foo": "^2.0.0", "bar": "invalidVersion" }}',
+          'package.json': `${JSON.stringify({
+            dependencies: {
+              foo: '^2.0.0',
+              bar: 'invalidVersion',
+              'a.b.c': '~5.5.0',
+            },
+            devDependencies: { 'one.two.three': '^4.0.0' },
+          })}\n`, // Ends in newline.
         },
       });
     });
@@ -154,34 +166,76 @@ describe('Utils | dependency-versions', function () {
         mismatchingVersions
       );
 
-      const packageJson1: PackageJson = JSON.parse(
-        readFileSync('scope1/package1/package.json', 'utf-8')
+      // Read in package.json files.
+      const packageJsonRootContents = readFileSync('package.json', 'utf-8');
+      const packageJson1Contents = readFileSync(
+        'scope1/package1/package.json',
+        'utf-8'
       );
-      const packageJson2: PackageJson = JSON.parse(
-        readFileSync('scope1/package2/package.json', 'utf-8')
+      const packageJson2Contents = readFileSync(
+        'scope1/package2/package.json',
+        'utf-8'
       );
+      const packageJsonRoot: PackageJson = JSON.parse(packageJsonRootContents);
+      const packageJson1: PackageJson = JSON.parse(packageJson1Contents);
+      const packageJson2: PackageJson = JSON.parse(packageJson2Contents);
 
+      // foo
       strictEqual(
         packageJson1.dependencies && packageJson1.dependencies.foo,
         '^2.0.0',
         'updates the package1 `foo` version to the highest version'
       );
       strictEqual(
+        packageJson2.dependencies && packageJson2.dependencies.foo,
+        '^2.0.0',
+        'does not change package2 `foo` version since already at highest version'
+      );
+      strictEqual(
+        packageJsonRoot.devDependencies && packageJsonRoot.devDependencies.foo,
+        '^2.0.0',
+        'updates the root package `foo` version to the highest version'
+      );
+
+      // bar
+      strictEqual(
         packageJson1.dependencies && packageJson1.dependencies.bar,
         '^3.0.0',
         'does not change package1 `bar` version due to abnormal version present'
       );
       strictEqual(
-        packageJson2.dependencies && packageJson2.dependencies.foo,
-        '^2.0.0',
-        'does not change package1 `foo` version since already at highest version'
-      );
-      strictEqual(
         packageJson2.dependencies && packageJson2.dependencies.bar,
         'invalidVersion',
-        'does not change package1 `bar` version due to abnormal version present'
+        'does not change package2 `bar` version due to abnormal version present'
       );
 
+      // a.b.c
+      strictEqual(
+        packageJson1.dependencies && packageJson1.dependencies['a.b.c'],
+        '~5.5.0',
+        'updates the package1 `a.b.c` version to the highest version'
+      );
+      strictEqual(
+        packageJson2.dependencies && packageJson2.dependencies['a.b.c'],
+        '~5.5.0',
+        'does not change package2 `a.b.c` version since already at highest version'
+      );
+
+      // one.two.three
+      strictEqual(
+        packageJson1.devDependencies &&
+          packageJson1.devDependencies['one.two.three'],
+        '^4.1.0',
+        'does not change package1 `one.two.three` version since already at highest version'
+      );
+      strictEqual(
+        packageJson2.devDependencies &&
+          packageJson2.devDependencies['one.two.three'],
+        '^4.1.0',
+        'updates the package2 `one.two.three` version to the highest version'
+      );
+
+      // Check return value.
       deepStrictEqual(
         fixedMismatchingVersions,
         [
@@ -201,6 +255,13 @@ describe('Utils | dependency-versions', function () {
         ],
         'should return only the dependency that could not be fixed due to the abnormal version present'
       );
+
+      // Existing newline at end of file should be maintained.
+      ok(
+        !packageJson1Contents.endsWith('\n'),
+        'package1 should not end in newline'
+      );
+      ok(packageJson2Contents.endsWith('\n'), 'package2 should end in newline');
     });
   });
 

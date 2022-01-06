@@ -1,6 +1,9 @@
+node_modules/
+
 dist/
 
 .eslintcache
+.DS_Store
 
 # Test output:
 .nyc_output

@@ -4,6 +4,54 @@
 
 
 
+
+
+
+## v1.4.2 (2021-12-08)
+
+#### :bug: Bug Fix
+* [#275](https://github.com/bmish/check-dependency-version-consistency/pull/275) Avoid crash when abnormal version present ([@bmish](https://github.com/bmish))
+* [#271](https://github.com/bmish/check-dependency-version-consistency/pull/271) Correctly expand globs in workspace paths ([@bmish](https://github.com/bmish))
+
+#### :house: Internal
+* [#253](https://github.com/bmish/check-dependency-version-consistency/pull/253) Add GitHub Actions to Dependabot config ([@ddzz](https://github.com/ddzz))
+
+#### Committers: 2
+- Bryan Mishkin ([@bmish](https://github.com/bmish))
+- Darius D. ([@ddzz](https://github.com/ddzz))
+
+
+## v1.4.1 (2021-10-28)
+
+#### :bug: Bug Fix
+* [#241](https://github.com/bmish/check-dependency-version-consistency/pull/241) Don't ignore workspace root package.json ([@bmish](https://github.com/bmish))
+* [#242](https://github.com/bmish/check-dependency-version-consistency/pull/242) Maintain newline at end of package.json file ([@bmish](https://github.com/bmish))
+
+#### :house: Internal
+* [#243](https://github.com/bmish/check-dependency-version-consistency/pull/243) Test under Node 17 ([@bmish](https://github.com/bmish))
+
+#### Committers: 1
+- Bryan Mishkin ([@bmish](https://github.com/bmish))
+
+
+## v1.4.0 (2021-10-12)
+
+#### :rocket: Enhancement
+* [#206](https://github.com/bmish/check-dependency-version-consistency/pull/206) Bold maximum usage count for each mismatched dependency ([@bmish](https://github.com/bmish))
+* [#205](https://github.com/bmish/check-dependency-version-consistency/pull/205) Improve discoverability of `fix` option ([@bmish](https://github.com/bmish))
+
+#### :bug: Bug Fix
+* [#238](https://github.com/bmish/check-dependency-version-consistency/pull/238) Fix autofixer when dots are present in dependency name ([@bmish](https://github.com/bmish))
+
+#### :house: Internal
+* [#237](https://github.com/bmish/check-dependency-version-consistency/pull/237) Improve autofixer test coverage ([@bmish](https://github.com/bmish))
+* [#214](https://github.com/bmish/check-dependency-version-consistency/pull/214) Add dependency caching to CI ([@ddzz](https://github.com/ddzz))
+
+#### Committers: 2
+- Bryan Mishkin ([@bmish](https://github.com/bmish))
+- Darius Dzien ([@ddzz](https://github.com/ddzz))
+
+
 ## v1.3.0 (2021-09-09)
 
 #### :rocket: Enhancement
