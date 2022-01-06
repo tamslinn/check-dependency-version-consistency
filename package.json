@@ -20,7 +20,6 @@
     "check-dependency-version-consistency": "dist/bin/check-dependency-version-consistency.js"
   },
   "scripts": {
-    "prepare": "tsc",
     "build": "tsc",
     "lint": "npm-run-all --aggregate-output --continue-on-error --parallel lint:*",
     "lint:docs": "markdownlint \"**/*.md\"",
