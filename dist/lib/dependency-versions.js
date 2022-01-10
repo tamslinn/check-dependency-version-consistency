@@ -64,36 +64,39 @@ export function calculateMismatchingVersions(dependencyVersions) {
             return undefined;
         }
         const uniqueVersions = [
-            ...new Set(versionList.map((obj) => obj.version)),
+            ...new Set(versionList.map((object) => object.version)),
         ].sort();
         if (uniqueVersions.length > 1) {
             const uniqueVersionsWithInfo = uniqueVersions.map((uniqueVersion) => {
-                const matchingVersions = versionList.filter((obj) => obj.version === uniqueVersion);
+                const matchingVersions = versionList.filter((object) => object.version === uniqueVersion);
                 return {
                     version: uniqueVersion,
-                    packages: matchingVersions.map((obj) => obj.packageName).sort(),
+                    packages: matchingVersions
+                        .map((object) => object.packageName)
+                        .sort(),
                 };
             });
             return { dependency, versions: uniqueVersionsWithInfo };
         }
         return undefined;
     })
-        .filter((obj) => obj !== undefined);
+        .filter((object) => object !== undefined);
 }
-export function filterOutIgnoredDependencies(mismatchingVersions, ignoredDependencies) {
-    ignoredDependencies.forEach((ignoreDependency) => {
+export function filterOutIgnoredDependencies(mismatchingVersions, ignoredDependencies, ignoredDependencyPatterns) {
+    for (const ignoreDependency of ignoredDependencies) {
         if (!mismatchingVersions.some((mismatchingVersion) => mismatchingVersion.dependency === ignoreDependency)) {
             throw new Error(`Specified option '--ignore-dep ${ignoreDependency}', but no mismatches detected.`);
         }
-    });
-    return mismatchingVersions.filter((mismatchingVersion) => !ignoredDependencies.includes(mismatchingVersion.dependency));
+    }
+    return mismatchingVersions.filter((mismatchingVersion) => !ignoredDependencies.includes(mismatchingVersion.dependency) &&
+        !ignoredDependencyPatterns.some((ignoreDependencyPattern) => mismatchingVersion.dependency.match(ignoreDependencyPattern)));
 }
 export function fixMismatchingVersions(root, ignorePackage, mismatchingVersions) {
     const packageJsonPaths = getPackageJsonPaths(root, ignorePackage);
     // Return any mismatching versions that are still present after attempting fixes.
     return mismatchingVersions
         .map((mismatchingVersion) => {
-        const versions = mismatchingVersion.versions.map((obj) => obj.version);
+        const versions = mismatchingVersion.versions.map((object) => object.version);
         let sortedVersions;
         try {
             sortedVersions = versions.sort(compareRanges);
@@ -116,7 +119,10 @@ export function fixMismatchingVersions(root, ignorePackage, mismatchingVersions)
                     stringify_eol: packageJsonEndsInNewline, // If a newline at end of file exists, keep it.
                 });
                 packageJsonEditor.set(`devDependencies.${mismatchingVersion.dependency.replace(/\./g, // Escape dots.
-                '\\.')}`, fixedVersion);
+                '\\.')}`, fixedVersion, 
+                // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                // @ts-ignore (@types/edit-json-file not available for 1.7)
+                { preservePaths: false });
             }
             if (packageJson.dependencies &&
                 packageJson.dependencies[mismatchingVersion.dependency] &&
@@ -127,7 +133,10 @@ export function fixMismatchingVersions(root, ignorePackage, mismatchingVersions)
                     stringify_eol: packageJsonEndsInNewline, // If a newline at end of file exists, keep it.
                 });
                 packageJsonEditor.set(`dependencies.${mismatchingVersion.dependency.replace(/\./g, // Escape dots.
-                '\\.')}`, fixedVersion);
+                '\\.')}`, fixedVersion, 
+                // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                // @ts-ignore (@types/edit-json-file not available for 1.7)
+                { preservePaths: false });
             }
         }
         // Fixed successfully.

@@ -26,12 +26,12 @@ function run() {
         .version(getCurrentPackageVersion())
         .addArgument(new Argument('[path]', 'path to workspace root').default('.'))
         .option('--fix', 'Whether to autofix inconsistencies (using highest version present)', false)
-        .option('--ignore-dep <dependency>', 'Dependency to ignore (option can be repeated)', collect, [])
-        .option('--ignore-package <package>', 'Package to ignore (option can be repeated)', collect, [])
+        .option('--ignore-dep <dependency-name>', 'Dependency to ignore (option can be repeated)', collect, [])
+        .option('--ignore-package <package>', 'Package to ignore (option can be repeated)', collect, []).option('--ignore-dep-pattern <dependency-name-pattern>', 'RegExp of dependency names to ignore (option can be repeated)', collect, [])
         .action(function (path, options) {
         // Calculate.
         const dependencyVersions = calculateVersionsForEachDependency(path, options.ignorePackage);
-        let mismatchingVersions = filterOutIgnoredDependencies(calculateMismatchingVersions(dependencyVersions), options.ignoreDep);
+        let mismatchingVersions = filterOutIgnoredDependencies(calculateMismatchingVersions(dependencyVersions), options.ignoreDep, options.ignoreDepPattern);
         if (options.fix) {
             mismatchingVersions = fixMismatchingVersions(path, options.ignorePackage, mismatchingVersions);
         }
@@ -46,9 +46,9 @@ function run() {
 try {
     run();
 }
-catch (e) {
-    if (e instanceof Error) {
-        console.error(e.message);
+catch (error) {
+    if (error instanceof Error) {
+        console.error(error.message);
     }
     process.exitCode = 1;
 }

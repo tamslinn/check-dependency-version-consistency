@@ -6,12 +6,12 @@ export function mismatchingVersionsToOutput(mismatchingDependencyVersions) {
         throw new Error('No mismatching versions to output.');
     }
     const tables = mismatchingDependencyVersions
-        .map((obj) => {
-        const headers = [chalk.bold(obj.dependency), 'Usages', 'Packages'];
-        const usageCounts = obj.versions.map((versionObj) => versionObj.packages.length);
+        .map((object) => {
+        const headers = [chalk.bold(object.dependency), 'Usages', 'Packages'];
+        const usageCounts = object.versions.map((versionObject) => versionObject.packages.length);
         const highestUsageCount = Math.max(...usageCounts);
         const hasMultipleUsageCounts = !usageCounts.every((count) => count === highestUsageCount);
-        const rows = obj.versions
+        const rows = object.versions
             .sort((a, b) => {
             try {
                 return compareRanges(b.version, a.version);
@@ -20,14 +20,14 @@ export function mismatchingVersionsToOutput(mismatchingDependencyVersions) {
                 return 0;
             }
         })
-            .map((versionObj) => {
-            const usageCount = versionObj.packages.length;
-            const packageNames = versionObj.packages.map((pkg) => pkg === '.' ? '(Root)' : pkg);
+            .map((versionObject) => {
+            const usageCount = versionObject.packages.length;
+            const packageNames = versionObject.packages.map((package_) => package_ === '.' ? '(Root)' : package_);
             const packageListSentence = usageCount > 3
                 ? `${packageNames.slice(0, 3).join(', ')}, and ${usageCount - 3} other${usageCount - 3 === 1 ? '' : 's'}`
                 : packageNames.join(', ');
             return [
-                chalk.redBright(versionObj.version),
+                chalk.redBright(versionObject.version),
                 // Bold the usage count if it's the highest, as long as it's not the only usage count present.
                 usageCount === highestUsageCount && hasMultipleUsageCounts
                     ? chalk.bold(usageCount)

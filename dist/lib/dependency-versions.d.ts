@@ -27,6 +27,6 @@ export declare type MismatchingDependencyVersions = Array<{
  */
 export declare function calculateVersionsForEachDependency(root: string, ignorePackage: string[]): DependenciesToVersionsSeen;
 export declare function calculateMismatchingVersions(dependencyVersions: DependenciesToVersionsSeen): MismatchingDependencyVersions;
-export declare function filterOutIgnoredDependencies(mismatchingVersions: MismatchingDependencyVersions, ignoredDependencies: string[]): MismatchingDependencyVersions;
+export declare function filterOutIgnoredDependencies(mismatchingVersions: MismatchingDependencyVersions, ignoredDependencies: string[], ignoredDependencyPatterns: RegExp[]): MismatchingDependencyVersions;
 export declare function fixMismatchingVersions(root: string, ignorePackage: string[], mismatchingVersions: MismatchingDependencyVersions): MismatchingDependencyVersions;
 export declare function compareRanges(a: string, b: string): 0 | -1 | 1;

@@ -50,27 +50,19 @@ function run() {
       []
     )
     .option(
-<<<<<<< HEAD
       '--ignore-package <package>',
       'Package to ignore (option can be repeated)',
-=======
+      collect,
+      []
+    ).option(
       '--ignore-dep-pattern <dependency-name-pattern>',
       'RegExp of dependency names to ignore (option can be repeated)',
->>>>>>> fix/deps-with-slash-in-name
       collect,
       []
     )
     .action(function (
       path,
-<<<<<<< HEAD
-      options: { ignoreDep: string[]; ignorePackage: string[]; fix: boolean }
-=======
-      options: {
-        ignoreDep: string[];
-        ignoreDepPattern: RegExp[];
-        fix: boolean;
-      }
->>>>>>> fix/deps-with-slash-in-name
+      options: { ignoreDep: string[]; ignorePackage: string[]; ignoreDepPattern: RegExp[]; fix: boolean }
     ) {
       // Calculate.
       const dependencyVersions = calculateVersionsForEachDependency(
