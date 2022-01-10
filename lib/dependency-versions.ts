@@ -35,18 +35,17 @@ export type MismatchingDependencyVersions = Array<{
  * }
  */
 export function calculateVersionsForEachDependency(
-  root: string,
-  ignorePackage: string[]
+root: string,
+ignorePackage: string[]
 ): DependenciesToVersionsSeen {
   const dependenciesToVersionsSeen: DependenciesToVersionsSeen = new Map<
-    string,
-    { packageName: string; version: string }[]
+  string, { packageName: string; version: string }[]
   >();
   getPackageJsonPaths(root, ignorePackage).forEach((packageJsonPath) =>
     recordDependencyVersionsForPackageJson(
-      dependenciesToVersionsSeen,
-      packageJsonPath,
-      root
+    dependenciesToVersionsSeen,
+    packageJsonPath,
+    root
     )
   );
   return dependenciesToVersionsSeen;
@@ -125,17 +124,19 @@ export function calculateMismatchingVersions(
       }
 
       const uniqueVersions = [
-        ...new Set(versionList.map((obj) => obj.version)),
+        ...new Set(versionList.map((object) => object.version)),
       ].sort();
 
       if (uniqueVersions.length > 1) {
         const uniqueVersionsWithInfo = uniqueVersions.map((uniqueVersion) => {
           const matchingVersions = versionList.filter(
-            (obj) => obj.version === uniqueVersion
+            (object) => object.version === uniqueVersion
           );
           return {
             version: uniqueVersion,
-            packages: matchingVersions.map((obj) => obj.packageName).sort(),
+            packages: matchingVersions
+              .map((object) => object.packageName)
+              .sort(),
           };
         });
         return { dependency, versions: uniqueVersionsWithInfo };
@@ -143,14 +144,15 @@ export function calculateMismatchingVersions(
 
       return undefined;
     })
-    .filter((obj) => obj !== undefined) as MismatchingDependencyVersions;
+    .filter((object) => object !== undefined) as MismatchingDependencyVersions;
 }
 
 export function filterOutIgnoredDependencies(
   mismatchingVersions: MismatchingDependencyVersions,
-  ignoredDependencies: string[]
+  ignoredDependencies: string[],
+  ignoredDependencyPatterns: RegExp[]
 ): MismatchingDependencyVersions {
-  ignoredDependencies.forEach((ignoreDependency) => {
+  for (const ignoreDependency of ignoredDependencies) {
     if (
       !mismatchingVersions.some(
         (mismatchingVersion) =>
@@ -161,10 +163,13 @@ export function filterOutIgnoredDependencies(
         `Specified option '--ignore-dep ${ignoreDependency}', but no mismatches detected.`
       );
     }
-  });
+  }
   return mismatchingVersions.filter(
     (mismatchingVersion) =>
-      !ignoredDependencies.includes(mismatchingVersion.dependency)
+      !ignoredDependencies.includes(mismatchingVersion.dependency) &&
+      !ignoredDependencyPatterns.some((ignoreDependencyPattern) =>
+        mismatchingVersion.dependency.match(ignoreDependencyPattern)
+      )
   );
 }
 
@@ -178,7 +183,9 @@ export function fixMismatchingVersions(
   // Return any mismatching versions that are still present after attempting fixes.
   return mismatchingVersions
     .map((mismatchingVersion) => {
-      const versions = mismatchingVersion.versions.map((obj) => obj.version);
+      const versions = mismatchingVersion.versions.map(
+        (object) => object.version
+      );
       let sortedVersions;
       try {
         sortedVersions = versions.sort(compareRanges);
@@ -203,12 +210,16 @@ export function fixMismatchingVersions(
             autosave: true,
             stringify_eol: packageJsonEndsInNewline, // If a newline at end of file exists, keep it.
           });
+
           packageJsonEditor.set(
             `devDependencies.${mismatchingVersion.dependency.replace(
               /\./g, // Escape dots.
               '\\.'
             )}`,
-            fixedVersion
+            fixedVersion,
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore (@types/edit-json-file not available for 1.7)
+            { preservePaths: false }
           );
         }
 
@@ -227,7 +238,10 @@ export function fixMismatchingVersions(
               /\./g, // Escape dots.
               '\\.'
             )}`,
-            fixedVersion
+            fixedVersion,
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore (@types/edit-json-file not available for 1.7)
+            { preservePaths: false }
           );
         }
       }

@@ -93,7 +93,35 @@ describe('Utils | dependency-versions', function () {
         calculateVersionsForEachDependency(FIXTURE_PATH_INCONSISTENT_VERSIONS)
       );
       deepStrictEqual(
-        filterOutIgnoredDependencies(dependencyVersions, ['foo']),
+        filterOutIgnoredDependencies(dependencyVersions, ['foo'], []),
+        [
+          {
+            dependency: 'baz',
+            versions: [
+              {
+                version: '^7.8.9',
+                packages: [join('scope1', 'package1')],
+              },
+              {
+                version: '^8.0.0',
+                packages: [join('scope1', 'package2')],
+              },
+            ],
+          },
+        ]
+      );
+    });
+
+    it('filters out an ignored dependency with regexp', function () {
+      const dependencyVersions = calculateMismatchingVersions(
+        calculateVersionsForEachDependency(FIXTURE_PATH_INCONSISTENT_VERSIONS)
+      );
+      deepStrictEqual(
+        filterOutIgnoredDependencies(
+          dependencyVersions,
+          [],
+          [new RegExp('^f.+$')]
+        ),
         [
           {
             dependency: 'baz',
@@ -118,10 +146,28 @@ describe('Utils | dependency-versions', function () {
       );
       throws(
         () =>
-          filterOutIgnoredDependencies(dependencyVersions, ['nonexistentDep']),
+          filterOutIgnoredDependencies(
+            dependencyVersions,
+            ['nonexistentDep'],
+            []
+          ),
         new Error(
           "Specified option '--ignore-dep nonexistentDep', but no mismatches detected."
         )
+      );
+    });
+
+    it('does not throw when unnecessarily regexp-ignoring a dependency that has no mismatches (less strict vs. --ignore-dep to provide greater flexibility)', function () {
+      const dependencyVersions = calculateMismatchingVersions(
+        calculateVersionsForEachDependency(FIXTURE_PATH_INCONSISTENT_VERSIONS)
+      );
+      strictEqual(
+        filterOutIgnoredDependencies(
+          dependencyVersions,
+          [],
+          [new RegExp('nonexistentDep')]
+        ).length,
+        2
       );
     });
   });
@@ -137,7 +183,10 @@ describe('Utils | dependency-versions', function () {
         'scope1/package1': {
           'package.json': JSON.stringify({
             dependencies: { foo: '^1.0.0', bar: '^3.0.0', 'a.b.c': '5.0.0' },
-            devDependencies: { 'one.two.three': '^4.1.0' },
+            devDependencies: {
+              'one.two.three': '^4.1.0',
+              '@types/one': '1.0.1',
+            },
           }),
         },
         'scope1/package2': {
@@ -147,7 +196,10 @@ describe('Utils | dependency-versions', function () {
               bar: 'invalidVersion',
               'a.b.c': '~5.5.0',
             },
-            devDependencies: { 'one.two.three': '^4.0.0' },
+            devDependencies: {
+              'one.two.three': '^4.0.0',
+              '@types/one': '1.0.0',
+            },
           })}\n`, // Ends in newline.
         },
       });
@@ -233,6 +285,20 @@ describe('Utils | dependency-versions', function () {
           packageJson2.devDependencies['one.two.three'],
         '^4.1.0',
         'updates the package2 `one.two.three` version to the highest version'
+      );
+
+      // @types/one
+      strictEqual(
+        packageJson1.devDependencies &&
+          packageJson1.devDependencies['@types/one'],
+        '1.0.1',
+        'does not change package1 `@types/one` version since already at highest version'
+      );
+      strictEqual(
+        packageJson2.devDependencies &&
+          packageJson2.devDependencies['@types/one'],
+        '1.0.1',
+        'updates the package2 `@types/one` version to the highest version'
       );
 
       // Check return value.
